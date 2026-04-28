@@ -1,10 +1,15 @@
 import numpy as np
 import librosa
-from collections import defaultdict, Counter
 from dejavu import Dejavu
 from dejavu.fingerprint import fingerprint
+from app.services.acoustid_service import identify_with_acoustid
+from app.services.cache_service import (
+    generate_fp_hash,
+    get_cached_result,
+    store_cached_result
+)
 
-# SQLite config
+# SQLite config (kept for future Dejavu use if needed)
 config = {
     "database_type": "sqlite",
     "database": {
@@ -12,107 +17,83 @@ config = {
     }
 }
 
-# initialize Dejavu
 djv = Dejavu(config)
+
+# standard response formatting
+def build_response(song, artist=None, confidence=0, source="unknown", duration_ms=None):
+    return {
+        "song": song,
+        "artist": artist,
+        "confidence": confidence,
+        "source": source,
+        "duration_ms": duration_ms
+    }
 
 
 def identify_song(file_path: str):
     try:
-        # load audio
-
-        samples, sr = librosa.load(file_path, sr=44100, mono=True)
+        # load audio and standardize it
+        samples, sr = librosa.load(file_path, sr=22050, mono=True)
         samples = np.array(samples, dtype=np.float32)
 
         duration_ms = int(len(samples) / sr * 1000)
-        print("Audio duration (ms):", duration_ms)
+        print("audio duration (ms):", duration_ms)
 
-        # convert to int16 format for fingerprinting
+        if len(samples) == 0:
+            return build_response("no match", None, 0, "none", duration_ms)
 
+        # generate fingerprints
         samples = np.clip(samples, -1.0, 1.0)
         samples = (samples * 32767).astype(np.int16)
 
-        if len(samples) == 0:
-            return {"error": "Audio samples are empty"}
-
-        # generate fingerprints
         hashes = []
         for channel in [samples]:
             hashes.extend(fingerprint(channel, Fs=sr))
 
         hashes = list(hashes)
-        print("Generated hashes:", len(hashes))
+        print("generated hashes:", len(hashes))
 
-        # limit hashes for performance (currently takes 5ish minutes for 2-3 minute songs)
-        hashes = hashes[:15000]
+        # generate cache key
+        fp_hash = generate_fp_hash(hashes)
+        print("fingerprint hash:", fp_hash)
 
-        # query database for matches
-        raw_matches = djv.db.return_matches(hashes)
-        print("Raw matches found:", len(raw_matches))
-        print("Sample raw match:", raw_matches[:5])
+        # check cache
+        cached = get_cached_result(fp_hash)
+        if cached:
+            print("Cache hit!")
+            return build_response(
+                cached["song"],
+                cached.get("artist"),
+                cached.get("confidence"),
+                "cache",
+                duration_ms
+            )
 
-        # clean matches and handle SQLite offsets properly
-        clean_matches = []
+        # acoustID only fast path
+        print("Using AcoustID (skipping local DB)...")
 
-        for m in raw_matches:
-            try:
-                sid = int(m[0])
+        api_result = identify_with_acoustid(file_path)
 
-                # SQLite stores offsets as bytes then convert
-                if isinstance(m[1], bytes):
-                    offset = int.from_bytes(m[1], byteorder='little')
-                else:
-                    offset = int(m[1])
+        if api_result:
+            print("Storing in cache...")
 
-                clean_matches.append((sid, offset))
-            except:
-                continue
+            store_cached_result(
+                fp_hash,
+                api_result.get("song"),
+                api_result.get("artist"),
+                api_result.get("confidence")
+            )
 
-        print("Clean matches:", len(clean_matches))
-
-        if not clean_matches:
-            return {"song": "No match", "confidence": 0}
-
-
-        # align matches
-        offset_groups = defaultdict(list)
-
-        for sid, offset in clean_matches:
-            offset_groups[sid].append(offset)
-
-        best_song = None
-        best_score = 0
-
-        for sid, offsets in offset_groups.items():
-            offset_count = Counter(offsets)
-            _, count = offset_count.most_common(1)[0]
-
-            if count > best_score:
-                best_score = count
-                best_song = sid
-
-        print("Best song ID:", best_song)
-        print("Best score:", best_score)
-
-        if best_song is None:
-            return {"song": "No match", "confidence": 0}
-
-
-        # lookup song name
-        song = djv.db.get_song_by_id(best_song)
-        print("Best song raw:", song)
-
-        # handle different return formats safely
-        if isinstance(song, tuple):
-            song_name = song[1]
-        elif isinstance(song, str):
-            song_name = song
-        else:
-            song_name = f"ID {best_song}"
-
-        return {
-            "song": song_name,
-            "confidence": best_score
-        }
+            return build_response(
+                api_result.get("song"),
+                api_result.get("artist"),
+                api_result.get("confidence"),
+                "acoustid",
+                duration_ms
+            )
+        
+        # fallback
+        return build_response("no match", None, 0, "none", duration_ms)
 
     except Exception as e:
         return {"error": str(e)}

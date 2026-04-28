@@ -1,0 +1,26 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# Database
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp / generated audio
+temp_*
+uploads/
+
+# Dev / test junk
+test_*.py
+tst.py
+
+# Frontend
+node_modules/
+dist/
