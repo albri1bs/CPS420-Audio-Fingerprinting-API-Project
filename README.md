@@ -83,7 +83,10 @@ pip install -r requirements.txt
 Create a .env file in the root directory:
 
 
-Navigate to https://acoustid.org/ and register your application to get an API key. You must not deploy for financial gain, the AcoustID API is an open-source, free software.
+Navigate to https://acoustid.org/ and register your application to get an API key. 
+You must not deploy for financial gain, the AcoustID API is an open-source, free software.
+
+
 ACOUSTID_API_KEY=your_api_key_here
 DB_PATCH=dejavu.db
 
