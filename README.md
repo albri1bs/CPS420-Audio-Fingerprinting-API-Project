@@ -46,12 +46,6 @@ Identifies a song from an uploaded or recorded audio file.
 
 ---
 
-### Request
-
-### Form Data
-
-
-
 ## Data Flow + Business Logic
 
 1. User uploads or records audio
