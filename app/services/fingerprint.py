@@ -9,7 +9,7 @@ from app.services.cache_service import (
     store_cached_result
 )
 
-# SQLite config (kept for future Dejavu use if needed)
+# SQLite config 
 config = {
     "database_type": "sqlite",
     "database": {
