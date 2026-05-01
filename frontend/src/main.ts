@@ -6,9 +6,7 @@ import { startRecording, stopRecording } from './recorder'
 const statusEl = document.querySelector("#status") as HTMLElement
 const resultEl = document.querySelector("#result") as HTMLElement
 
-// =======================
-// Upload
-// =======================
+// upload
 document.querySelector("#uploadBtn")?.addEventListener("click", async () => {
   const input = document.querySelector("#fileInput") as HTMLInputElement
   const file = input.files?.[0]
@@ -37,10 +35,7 @@ document.querySelector("#uploadBtn")?.addEventListener("click", async () => {
   }
 })
 
-
-// =======================
-// Recording
-// =======================
+// recording
 document.querySelector("#recordBtn")?.addEventListener("click", async () => {
   statusEl.innerText = "Recording..."
   await startRecording()
