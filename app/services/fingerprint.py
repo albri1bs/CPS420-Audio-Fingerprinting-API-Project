@@ -69,7 +69,6 @@ def identify_song(file_path: str):
                 duration_ms
             )
 
-        # acoustID only fast path
         print("using AcoustID (skipping local DB)...")
 
         api_result = identify_with_acoustid(file_path)
