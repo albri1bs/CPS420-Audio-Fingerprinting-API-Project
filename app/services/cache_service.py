@@ -14,7 +14,7 @@ def generate_fp_hash(hashes):
         combined = "".join(hash_strings)
         return hashlib.sha1(combined.encode()).hexdigest()
     except Exception as e:
-        print("Hash generation error:", e)
+        print("hash generation error:", e)
         return None
 
 def get_cached_result(fp_hash):
@@ -42,7 +42,7 @@ def get_cached_result(fp_hash):
         return None
 
     except Exception as e:
-        print("Cache read error:", e)
+        print("cache read error:", e)
         return None
 # store the fingerprint result in the cache
 # faster lookup speeds
