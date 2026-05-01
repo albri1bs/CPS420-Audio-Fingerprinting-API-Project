@@ -61,7 +61,7 @@ def store_cached_result(fp_hash, song, artist, confidence):
         conn.commit()
         conn.close()
 
-        print("Cached result stored.")
+        print("cached result stored.")
 
     except Exception as e:
-        print("Cache write error:", e)
+        print("cache write error:", e)
