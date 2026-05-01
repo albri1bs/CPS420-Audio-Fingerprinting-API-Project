@@ -60,7 +60,7 @@ def identify_song(file_path: str):
         # check cache
         cached = get_cached_result(fp_hash)
         if cached:
-            print("Cache hit!")
+            print("cache hit!")
             return build_response(
                 cached["song"],
                 cached.get("artist"),
@@ -70,12 +70,12 @@ def identify_song(file_path: str):
             )
 
         # acoustID only fast path
-        print("Using AcoustID (skipping local DB)...")
+        print("using AcoustID (skipping local DB)...")
 
         api_result = identify_with_acoustid(file_path)
 
         if api_result:
-            print("Storing in cache...")
+            print("storing in cache...")
 
             store_cached_result(
                 fp_hash,
