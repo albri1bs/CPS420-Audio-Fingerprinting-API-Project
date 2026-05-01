@@ -35,7 +35,7 @@ async def identify(file: UploadFile = File(...)):
         print("Saved file:", temp_path)
 
         if file.filename.endswith(".webm"):
-            print("Converting webm → wav...")
+            print("Converting webm -> wav...")
             temp_path = convert_to_wav(temp_path)
 
         result = identify_song(temp_path)
