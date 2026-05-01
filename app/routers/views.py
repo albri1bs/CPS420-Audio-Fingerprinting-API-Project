@@ -32,10 +32,10 @@ async def identify(file: UploadFile = File(...)):
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        print("Saved file:", temp_path)
+        print("saved file:", temp_path)
 
         if file.filename.endswith(".webm"):
-            print("Converting webm -> wav...")
+            print("converting webm -> wav...")
             temp_path = convert_to_wav(temp_path)
 
         result = identify_song(temp_path)
